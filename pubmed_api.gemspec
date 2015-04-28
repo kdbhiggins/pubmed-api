@@ -5,7 +5,7 @@ require 'pubmed_api/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "pubmed_api"
-  spec.version       = PubmedApi::VERSION
+  spec.version       = PubmedAPI::VERSION
   spec.authors       = ["Kieran Higgins"]
   spec.email         = ["kieran.higgins@gmail.com"]
   spec.summary       = %q{A Ruby gem for downloading paper and journal information from Pubmed Entrez.}
