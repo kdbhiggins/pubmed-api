@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = PubmedApi::VERSION
   spec.authors       = ["Kieran Higgins"]
   spec.email         = ["kieran.higgins@gmail.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
+  spec.summary       = %q{A Ruby gem for downloading paper and journal information from Pubmed Entrez.}
   spec.description   = %q{TODO: Write a longer description. Optional.}
   spec.homepage      = ""
   spec.license       = "MIT"
@@ -22,5 +22,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec"
   spec.add_dependency "nokogiri"
-  spec.add_dependency "open-uri"
+  
 end

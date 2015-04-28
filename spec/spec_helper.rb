@@ -1,0 +1,1 @@
+require 'pubmed_api'
