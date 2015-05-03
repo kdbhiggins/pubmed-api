@@ -9,6 +9,7 @@ module PubmedAPI
   	  results = SearchResult.new
   	  results.pmids = []
   	  results.mesh_terms = []
+      results.phrases_not_found = []
 
   	  results.count = doc.xpath('/eSearchResult/Count').first.content.to_i
 
@@ -21,7 +22,9 @@ module PubmedAPI
   	  end
 
   	  doc.xpath('/eSearchResult/ErrorList/PhraseNotFound').each {|n| results.phrases_not_found << n.content }
-  	  results
+  	  
+
+      results
   	
     end
 

@@ -14,10 +14,10 @@ module PubmedAPI
                        :database => 'pubmed', #which database eq pubmed/nlmcatalog
                        :verb => 'search', #which API verb to use e.g. search/fetch
                        :email => '',
-                       :reldate => 90, #How far back shall we go in days 
+                       #:reldate => 90, #How far back shall we go in days 
                        :retmax => 100000,
                        :retstart => 0,
-                       :load_all_pmids => false }
+                       :load_all_pmids => true }
                      
 
     URI_TEMPLATE = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/e{verb}.fcgi?db={database}&tool={tool}&email={email}'+
@@ -86,7 +86,6 @@ module PubmedAPI
 
       #Maked the HTTP request and return the responce
       #TODO handle failures
-      #Log API calls?
       def make_api_request(options)
           url = expand_uri(URI_TEMPLATE, options)
           Nokogiri::XML( open url )
@@ -94,11 +93,10 @@ module PubmedAPI
 
     
       #Some journals have odd NLMIDs that need to be searched for rarther than accessed directly.
-      #TODO combine into single API request 
       def convert_odd_journal_ids(id)
         
         new_id = nil
-        results = search(id, {:database => 'nlmcatalog', :reldate => '100000'})
+        results = search(id, {:database => 'nlmcatalog'})
         if results.pmids.length ==1
           new_id = results.pmids[0]
         else
@@ -106,6 +104,23 @@ module PubmedAPI
         end
         new_id.to_s
       end
+
+      
+      def get_journal_id_from_issn(issn)
+        
+        id = nil
+        term = issn + "[ISSN]+AND+ncbijournals[filter]"
+
+        results = search(term, {:database => 'nlmcatalog'})
+        if results.pmids.length ==1
+          id = results.pmids[0]
+        else
+          puts "failed to find " + issn.to_s
+        end
+        
+        id.to_s
+      end
+
 
       # 300ms minimum wait.
       def wait

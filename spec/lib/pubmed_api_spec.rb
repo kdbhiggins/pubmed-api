@@ -4,19 +4,25 @@ describe PubmedAPI do
 
 
   it "should perform a search" do
-    strucs = PubmedAPI::Interface.search("quantum physics", {:load_all_pmids => true, :reldate => 90})    
-    expect(strucs.length > 10)
+    results = PubmedAPI::Interface.search("quantum physics", {:reldate => 90})    
+    expect(results.pmids.length).to be > 10
+  end
+
+  it "should handle phrases not found" do
+    title = "Electron-Vibrational Coupling in the Fenna-Matthews-Olson Complex of Prosthecochloris a estuarii Determined by Temperature-Dependent Absorption and Fluorescence Line-Narrowing Measurements"
+    results = PubmedAPI::Interface.search( title, {:load_all_pmids => true})
+    expect(results.phrases_not_found).to eql(["estuarii"])
   end
 
   it "should make an API call" do
-  	options = PubmedAPI::Interface::DEFAULT_OPTIONS
-  	options.merge({:query => 'term=scrotum'})
-  	
-  	doc = PubmedAPI::Interface.make_api_request(options)
-    records = doc.xpath('./*/*')
+    options = PubmedAPI::Interface::DEFAULT_OPTIONS
+    options = options.merge({:query => 'term=scrotum'})
+
+    doc = PubmedAPI::Interface.make_api_request(options)
+    records = doc.xpath('/eSearchResult/IdList/Id')
     count = doc.xpath('/eSearchResult/Count').first.content.to_i
-    expect(count > 0 )
-    expect(records.length == count)
+    expect(count).to be > 0
+    expect(records.length).to eql(count)
   end 
   
 
@@ -25,8 +31,8 @@ describe PubmedAPI do
     title = "Completing the picture for the smallest eigenvalue of real Wishart matrices."
     strucs = PubmedAPI::Interface.fetch_papers([id])
     paper = strucs[0]
-    expect(paper.title.eql?(title))
-    expect(paper.pmid.eql?(id))
+    expect(paper.title).to eql(title)
+    expect(paper.pmid).to eql(id)
   end 
 
   it "should fetch a journal" do
@@ -34,13 +40,18 @@ describe PubmedAPI do
     title = 'Physical review letters.'
     strucs = PubmedAPI::Interface.fetch_journals([id])
     j = strucs[0]
-    expect(j.title_long.eql?(title))
-    expect(j.nlmid.eql?(id))
+    expect(j.title_long).to eql(title)
+    expect(j.nlmid).to eql(id)
   end 
  
   it "it should fix strange journal ids" do
-     fixed = PubmedAPI::Interface.convert_odd_journal_ids('16930290R')
-     expect( fixed.eql?('100381'))
+     fixed = PubmedAPI::Interface.convert_odd_journal_ids('19620690R')
+     expect(fixed).to eql('100381')
+  end
+
+  it "it should get journal id from issn" do
+     fixed = PubmedAPI::Interface.get_journal_id_from_issn('1361-6633')
+     expect(fixed).to eql('100381')
   end
 
 end
