@@ -3,7 +3,7 @@ require 'spec_helper'
 describe PubmedAPI do
 
   before(:all)  do 
-    @q_results = PubmedAPI::Interface.search("quantum physics") 
+    @q_results = PubmedAPI::Interface.search("quantum physics", {:reldate => '90'}) 
   end
 
 
@@ -40,6 +40,13 @@ describe PubmedAPI do
     expect(paper.url).to eql(url)
   end 
 
+
+  it "fetch in bulk" do
+    ids = @q_results.pmids
+    papers = PubmedAPI::Interface.fetch_papers(ids)
+    expect(papers.length).to eql(ids.length)
+  end 
+
   it "should fetch a journal" do
     id = '0401141'
     title = 'Physical review letters.'
@@ -66,6 +73,9 @@ describe PubmedAPI do
     paper = hash[ids[0]][0]
     expect(paper.url).to eql('http://link.aps.org/abstract/PRL/v114/p158701')
   end 
+
+
+
 
 
 
