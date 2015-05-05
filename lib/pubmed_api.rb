@@ -57,9 +57,7 @@ module PubmedAPI
         lookup_hash = get_fulltext_links(ids)
         
         papers.each do |p|
-          if p.nil? or lookup_hash[p.pmid].first.blank?
-             next
-          else
+          if !p.nil? and !lookup_hash[p.pmid].first.blank?
             p.url =  lookup_hash[p.pmid].first.url 
           end
         end
