@@ -32,7 +32,7 @@ To get a paper:
 strucs = PubmedAPI::Interface.fetch_papers([id])
 paper = struc[0]
 paper.title = "A paper title"
-paper.url = "A link to full text"
+paper.url = "http://alinktofulltext.com"
 
 Look in the spec for further examples 
 
