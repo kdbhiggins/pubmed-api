@@ -20,7 +20,21 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This is a work in progress. But you can use it 
+
+To search for papers:
+
+results = PubmedAPI::Interface.search("quantum physics") 
+results.pmids gives you a list of the matching pubmed ids
+
+To get a paper:
+
+strucs = PubmedAPI::Interface.fetch_papers([id])
+paper = struc[0]
+paper.title = "A paper title"
+paper.url = "A link to full text"
+
+Look in the spec for further examples 
 
 ## Contributing
 

@@ -11,17 +11,18 @@ module PubmedAPI
  
 
     DEFAULT_OPTIONS = {:tool => 'ruby-pubmed-api',
-                       :database => 'pubmed', #which database eq pubmed/nlmcatalog
+                       :database => 'db=pubmed', #which database eq pubmed/nlmcatalog
                        :verb => 'search', #which API verb to use e.g. search/fetch
                        :email => '',
-                       #:reldate => 90, #How far back shall we go in days 
+                       #:reldate => 90, #How far back shall we go in days
+                       :add =>'', 
                        :retmax => 100000,
                        :retstart => 0,
                        :load_all_pmids => true }
                      
 
-    URI_TEMPLATE = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/e{verb}.fcgi?db={database}&tool={tool}&email={email}'+
-                   '&reldate={reldate}&retmax={retmax}&retstart={retstart}&{query}&rettype=fasta&retmode=xml'
+    URI_TEMPLATE = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/e{verb}.fcgi?{database}&tool={tool}&email={email}'+
+                   '&reldate={reldate}&retmax={retmax}&retstart={retstart}&{query}&retmode=xml&{add}'
 
     class << self
 
@@ -50,24 +51,44 @@ module PubmedAPI
       end
 
       def fetch_papers(ids)
-        xml = fetch_records(ids, 'pubmed')
+        xml = fetch_records(ids, {:verb => 'fetch',:database => 'db=pubmed'})
         parser = XMLParser.new
-        parser.parse_papers(xml)
+        papers = parser.parse_papers(xml)
+        lookup_hash = get_fulltext_links(ids)
+        
+        papers.each do |p|
+          if p.nil?
+             next
+          else
+            p.url =  lookup_hash[p.pmid].first.url 
+          end
+        end
       end
 
       def fetch_journals(nlmids)
         #Change the ids of those wierd journals 
         nlmids = nlmids.map { |e|  ((e.include? 'R') ? convert_odd_journal_ids(e) : e ) }
-        xml = fetch_records(nlmids, 'nlmcatalog')
+        xml = fetch_records(nlmids, {:verb => 'fetch',:database => 'db=nlmcatalog'})
         parser = XMLParser.new
         parser.parse_journals(xml)       
       end
 
-      def fetch_records(ids, database)
+     def get_fulltext_links(ids)
+       opts = {:verb => 'link',  :add => 'cmd=llinks', :database => 'dbfrom=pubmed'}
+       xml = fetch_records(ids, opts)
+
+       parser = XMLParser.new
+       lookup_hash = parser.parse_links(xml)
+       missing = (ids - lookup_hash.keys)
+       lookup_hash
+     end
+
+
+      def fetch_records(ids, opts={})
 
         xml_records = []
         
-        options = DEFAULT_OPTIONS
+        options = DEFAULT_OPTIONS.merge(opts)
 
         #dice array into reasonable length chunks for download
         n_length = 500
@@ -76,13 +97,17 @@ module PubmedAPI
       
           #Turn string to something html friendly 
           id_string = slice.join(",")
-          doc = make_api_request(options.merge({:verb => 'fetch',:database => database, :query => 'id='+id_string}))
+          doc = make_api_request(options.merge({ :query => 'id='+id_string}))
           records = doc.xpath('./*/*')
-          xml_records << records
+          xml_records += records
 
         end
-        xml_records.flatten
+
+        xml_records
       end
+
+      
+
 
       #Maked the HTTP request and return the responce
       #TODO handle failures
@@ -96,7 +121,7 @@ module PubmedAPI
       def convert_odd_journal_ids(id)
         
         new_id = nil
-        results = search(id, {:database => 'nlmcatalog'})
+        results = search(id, {:database => 'db=nlmcatalog'})
         if results.pmids.length ==1
           new_id = results.pmids[0]
         else
@@ -111,7 +136,7 @@ module PubmedAPI
         id = nil
         term = issn + "[ISSN]+AND+ncbijournals[filter]"
 
-        results = search(term, {:database => 'nlmcatalog'})
+        results = search(term, {:database => 'db=nlmcatalog'})
         if results.pmids.length ==1
           id = results.pmids[0]
         else
@@ -120,6 +145,9 @@ module PubmedAPI
         
         id.to_s
       end
+
+
+ 
 
 
       # 300ms minimum wait.

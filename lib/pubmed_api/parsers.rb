@@ -13,7 +13,7 @@ module PubmedAPI
 
   	  results.count = doc.xpath('/eSearchResult/Count').first.content.to_i
 
-  	  doc.xpath('/eSearchResult/IdList/Id').each {|n| results.pmids << n.content.to_i}
+  	  doc.xpath('/eSearchResult/IdList/Id').each {|n| results.pmids << n.content.to_s}
   	      
   	  doc.xpath('/eSearchResult/TranslationStack/TermSet/Term').each do |n|
   	    if n.content =~ /"(.*)"\[MeSH Terms\]/
@@ -133,6 +133,33 @@ module PubmedAPI
       end
       pmid
     end
+
+    
+    LinkStruct = Struct.new( :url, :pub_id, :pub_name, :cat)
+
+    def parse_links(links_xml)
+      
+      l_struc_arr = []
+      link_arr = []
+      lookup_hash = Hash.new{ |a,b| a[b] = Array.new }
+      
+      links_xml.each do |node|
+        
+        node.css('IdUrlList/IdUrlSet').each do |links|
+          id = links.xpath('Id').text
+
+          links.css('ObjUrl').each do |l|
+            l_struc = LinkStruct.new(l.xpath('Url').text, l.xpath('Provider/Id').text, l.xpath('Name').text,
+                                        l.xpath('Category').text)
+ 
+            lookup_hash[id] << l_struc
+          end
+        end
+      end      
+      
+      lookup_hash
+    end
+
 
 
     AuthorStruct = Struct.new( :fore_name, :initials, :last_name)

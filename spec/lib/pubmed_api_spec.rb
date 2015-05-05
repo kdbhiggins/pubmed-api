@@ -2,10 +2,13 @@ require 'spec_helper'
 
 describe PubmedAPI do
 
+  before(:all)  do 
+    @q_results = PubmedAPI::Interface.search("quantum physics") 
+  end
+
 
   it "should perform a search" do
-    results = PubmedAPI::Interface.search("quantum physics", {:reldate => 90})    
-    expect(results.pmids.length).to be > 10
+    expect(@q_results.pmids.length).to be > 10
   end
 
   it "should handle phrases not found" do
@@ -29,10 +32,12 @@ describe PubmedAPI do
   it "should fetch a paper" do
     id = '25554862'
     title = "Completing the picture for the smallest eigenvalue of real Wishart matrices."
+    url = "http://link.aps.org/abstract/PRL/v113/p250201"
     strucs = PubmedAPI::Interface.fetch_papers([id])
     paper = strucs[0]
     expect(paper.title).to eql(title)
     expect(paper.pmid).to eql(id)
+    expect(paper.url).to eql(url)
   end 
 
   it "should fetch a journal" do
@@ -53,5 +58,15 @@ describe PubmedAPI do
      fixed = PubmedAPI::Interface.get_journal_id_from_issn('1361-6633')
      expect(fixed).to eql('100381')
   end
+
+  it "should get fulltext urls for ids" do
+    ids = ["25933345","25933144","23933344"]
+
+    hash = PubmedAPI::Interface.get_fulltext_links(ids)
+    paper = hash[ids[0]][0]
+    expect(paper.url).to eql('http://link.aps.org/abstract/PRL/v114/p158701')
+  end 
+
+
 
 end
